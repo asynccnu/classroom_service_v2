@@ -1,6 +1,7 @@
 package router
 
 import (
+	"github.com/asynccnu/classroom_service_v2/handler/classroom"
 	"net/http"
 
 	"github.com/asynccnu/classroom_service_v2/handler/sd"
@@ -22,10 +23,11 @@ func Load(g *gin.Engine, mw ...gin.HandlerFunc) *gin.Engine {
 		c.String(http.StatusNotFound, "The incorrect API route.")
 	})
 
-	classroom := g.Group("/classroom/v2")
+	class := g.Group("/classroom/v2")
 	// classroom.Use(middleware.AuthMiddleware())
 	{
-		u.GET("", classroom.Get)
+		class.GET("/get", classroom.Get)
+		class.GET("/refresh",classroom.Refresh)
 	}
 
 	// The health check handlers
