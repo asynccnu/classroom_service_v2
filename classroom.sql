@@ -1,4 +1,3 @@
-DROP TABLE classrooms;
 
 create table classrooms (
     week    int  not null,
