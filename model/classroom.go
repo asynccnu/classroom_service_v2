@@ -1,6 +1,5 @@
 package model
 
-
 // 数据库表的结构
 type Classrooms struct {
 	Week                int
@@ -34,7 +33,6 @@ type UnavailableClassrooms struct {
 }
 
 func InsertClassroomsInDB(instance *Classrooms) error {
-
 	result := DB.Self.Create(instance)
 	return result.Error
 }
@@ -45,7 +43,7 @@ func UpdateAvailableClassroomInDB(instance *Classrooms) {
 
 func GetClassroomsFromDB(week int, weekday int, building string) (*Classrooms, error) {
 	classroom := Classrooms{}
-	result := DB.Self.Where("week = ? AND weekday= ? AND building= ?", week, weekday, building).First(&classroom)
+	result := DB.Self.Where("week = ? AND weekday = ? AND building = ?", week, weekday, building).First(&classroom)
 
 	return &classroom, result.Error
 }

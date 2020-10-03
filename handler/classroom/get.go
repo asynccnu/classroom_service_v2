@@ -1,12 +1,14 @@
 package classroom
 
 import (
+	"strconv"
+
 	"github.com/asynccnu/classroom_service_v2/handler"
 	"github.com/asynccnu/classroom_service_v2/model"
 	"github.com/asynccnu/classroom_service_v2/pkg/errno"
 	"github.com/asynccnu/classroom_service_v2/service"
+
 	"github.com/gin-gonic/gin"
-	"strconv"
 )
 
 func Get(c *gin.Context) {
@@ -18,6 +20,7 @@ func Get(c *gin.Context) {
 		handler.SendBadRequest(c, errno.ErrQuery, nil, "weekno, week and building are required.")
 		return
 	}
+
 	weeknoString, _ := strconv.Atoi(week)
 	weekString, _ := strconv.Atoi(weekday)
 	classroom, err := model.GetClassroomsFromDB(weeknoString, weekString, building)

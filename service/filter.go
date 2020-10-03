@@ -1,9 +1,10 @@
 package service
 
 import (
+	"runtime"
+
 	"github.com/asynccnu/classroom_service_v2/log"
 	"github.com/asynccnu/classroom_service_v2/model"
-	"runtime"
 
 	"sync"
 
@@ -91,10 +92,10 @@ func RemoveUnavailableClassroomsInDB(channel chan *model.UnavailableClassrooms) 
 			classroomsInDB.AvailableClassrooms = *MarshalData(availableClassrooms)
 
 			model.UpdateAvailableClassroomInDB(classroomsInDB)
-			availableClassrooms=nil
-			classroomsInDB=nil
+			availableClassrooms = nil
+			classroomsInDB = nil
 		}
-		unavailableClassrooms=nil
+		unavailableClassrooms = nil
 		runtime.GC()
 	}
 

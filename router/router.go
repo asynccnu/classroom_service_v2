@@ -1,9 +1,9 @@
 package router
 
 import (
-	"github.com/asynccnu/classroom_service_v2/handler/classroom"
 	"net/http"
 
+	"github.com/asynccnu/classroom_service_v2/handler/classroom"
 	"github.com/asynccnu/classroom_service_v2/handler/sd"
 	"github.com/asynccnu/classroom_service_v2/router/middleware"
 
@@ -24,10 +24,8 @@ func Load(g *gin.Engine, mw ...gin.HandlerFunc) *gin.Engine {
 	})
 
 	class := g.Group("/classroom/v2")
-	// classroom.Use(middleware.AuthMiddleware())
 	{
-		class.GET("/get", classroom.Get)
-		class.GET("/refresh",classroom.Refresh)
+		class.GET("", classroom.Get)
 	}
 
 	// The health check handlers

@@ -2,13 +2,14 @@ package service
 
 import (
 	"encoding/json"
-	"github.com/asynccnu/classroom_service_v2/log"
-	"github.com/asynccnu/classroom_service_v2/model"
-	"github.com/tealeg/xlsx/v3"
-	"go.uber.org/zap"
-
 	"regexp"
 	"strconv"
+
+	"github.com/asynccnu/classroom_service_v2/log"
+	"github.com/asynccnu/classroom_service_v2/model"
+
+	"github.com/tealeg/xlsx/v3"
+	"go.uber.org/zap"
 )
 
 // 选课手册地址
@@ -105,7 +106,7 @@ func InsertAllClassrooms() {
 
 // 从选课手册中解析被使用的教室
 func GetUnavailableClassrooms(channel chan *model.UnavailableClassrooms) {
-	weekdayMap := map[string]int{"一": 1, "二": 2, "三": 3, "四": 4, "五": 5,"六":6,"七":7}
+	weekdayMap := map[string]int{"一": 1, "二": 2, "三": 3, "四": 4, "五": 5, "六": 6, "七": 7}
 	file, err := xlsx.OpenFile(filePath)
 	if err != nil {
 		log.Fatal("Open xlsxFlie failed",
@@ -116,7 +117,7 @@ func GetUnavailableClassrooms(channel chan *model.UnavailableClassrooms) {
 	// 选课手册中第10,11 \12,13\ 14,15 列为上课时间地点
 	// 时间的格式为星期一第9-10节{1-15周(单)} 或 星期一第9-10节{1-15周} 或 星期一第9-10节{1-15周}
 	for _, sheet := range file.Sheets {
-		max:=sheet.MaxRow
+		max := sheet.MaxRow
 		// 不要把下面max替换成sheet.MaxRow, 会死机,我吐了
 		for i := 0; i <= max; i++ {
 			for j := 10; j <= 14; j += 2 {
@@ -125,7 +126,7 @@ func GetUnavailableClassrooms(channel chan *model.UnavailableClassrooms) {
 				if cellDate.Value != "" {
 					date := cellDate.String()
 					place := cellPlace.String()
-					if place==""{
+					if place == "" {
 						continue
 					}
 					if place[:1] == "7" || place[:1] == "8" || place[:1] == "N" {
