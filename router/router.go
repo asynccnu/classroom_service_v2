@@ -25,7 +25,7 @@ func Load(g *gin.Engine, mw ...gin.HandlerFunc) *gin.Engine {
 
 	class := g.Group("/classroom/v2")
 	{
-		class.GET("", classroom.Get)
+		class.GET("get", classroom.Get)
 	}
 
 	// The health check handlers

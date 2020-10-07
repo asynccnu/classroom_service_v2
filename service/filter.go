@@ -13,7 +13,7 @@ import (
 
 var wg sync.WaitGroup
 
-func InsertAllAndFilter() {
+func InsertAllAndFilter(filePath string) {
 
 	// 先插入所有教室
 	InsertAllClassrooms()
@@ -23,7 +23,7 @@ func InsertAllAndFilter() {
 	for i := 0; i < 8; i++ {
 		go RemoveUnavailableClassroomsInDB(channel)
 	}
-	go GetUnavailableClassrooms(channel)
+	GetUnavailableClassrooms(channel, filePath)
 
 	wg.Wait()
 }
@@ -56,46 +56,34 @@ func RemoveUnavailableClassroomsInDB(channel chan *model.UnavailableClassrooms) 
 				continue
 			}
 
-			availableClassrooms := UnMarshalData(&classroomsInDB.AvailableClassrooms)
+			// 这个取址符要加,我以为不加也行的
+			availableClassrooms := &classroomsInDB.AvailableClassrooms
+
+			classroomMap := map[int]*[]string{1: &availableClassrooms.One, 2: &availableClassrooms.Two, 3: &availableClassrooms.Three,
+				4: &availableClassrooms.Four, 5: &availableClassrooms.Five, 6: &availableClassrooms.Six, 7: &availableClassrooms.Seven,
+				8: &availableClassrooms.Eight, 9: &availableClassrooms.Nine, 10: &availableClassrooms.Ten,
+				11: &availableClassrooms.Eleven, 12: &availableClassrooms.Twelve}
+
 			for _, time := range unavailableClassrooms.Time {
-				switch time {
-				case 1:
-					availableClassrooms.One = RemoveUnavailableClassroomFromList(&availableClassrooms.One, unavailableClassrooms.Place)
-				case 2:
-					availableClassrooms.Two = RemoveUnavailableClassroomFromList(&availableClassrooms.Two, unavailableClassrooms.Place)
-				case 3:
-					availableClassrooms.Three = RemoveUnavailableClassroomFromList(&availableClassrooms.Three, unavailableClassrooms.Place)
-				case 4:
-					availableClassrooms.Four = RemoveUnavailableClassroomFromList(&availableClassrooms.Four, unavailableClassrooms.Place)
-				case 5:
-					availableClassrooms.Five = RemoveUnavailableClassroomFromList(&availableClassrooms.Five, unavailableClassrooms.Place)
-				case 6:
-					availableClassrooms.Six = RemoveUnavailableClassroomFromList(&availableClassrooms.Six, unavailableClassrooms.Place)
-				case 7:
-					availableClassrooms.Seven = RemoveUnavailableClassroomFromList(&availableClassrooms.Seven, unavailableClassrooms.Place)
-				case 8:
-					availableClassrooms.Eight = RemoveUnavailableClassroomFromList(&availableClassrooms.Eight, unavailableClassrooms.Place)
-				case 9:
-					availableClassrooms.Nine = RemoveUnavailableClassroomFromList(&availableClassrooms.Nine, unavailableClassrooms.Place)
-				case 10:
-					availableClassrooms.Ten = RemoveUnavailableClassroomFromList(&availableClassrooms.Ten, unavailableClassrooms.Place)
-				case 11:
-					availableClassrooms.Eleven = RemoveUnavailableClassroomFromList(&availableClassrooms.Eleven, unavailableClassrooms.Place)
-				case 12:
-					availableClassrooms.Twelve = RemoveUnavailableClassroomFromList(&availableClassrooms.Twelve, unavailableClassrooms.Place)
-				default:
-					log.Error("Can't find right time")
+				classroomWithTime, exist := classroomMap[time]
+				if !exist {
+					log.Error("wrong classroom Time",
+					)
+					continue
 				}
 
+				*classroomWithTime = RemoveUnavailableClassroomFromList(classroomWithTime, unavailableClassrooms.Place)
 			}
 
-			classroomsInDB.AvailableClassrooms = *MarshalData(availableClassrooms)
+			err = model.UpdateAvailableClassroomInDB(classroomsInDB)
+			if err != nil {
+				log.Error("Update available classroom in db failed",
+					zap.String("reason", err.Error()),
+				)
+			}
 
-			model.UpdateAvailableClassroomInDB(classroomsInDB)
-			availableClassrooms = nil
-			classroomsInDB = nil
 		}
-		unavailableClassrooms = nil
+
 		runtime.GC()
 	}
 

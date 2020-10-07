@@ -6,7 +6,6 @@ import (
 	"github.com/asynccnu/classroom_service_v2/handler"
 	"github.com/asynccnu/classroom_service_v2/model"
 	"github.com/asynccnu/classroom_service_v2/pkg/errno"
-	"github.com/asynccnu/classroom_service_v2/service"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,15 +20,24 @@ func Get(c *gin.Context) {
 		return
 	}
 
-	weeknoString, _ := strconv.Atoi(week)
-	weekString, _ := strconv.Atoi(weekday)
+	weeknoString, err := strconv.Atoi(week)
+	if err != nil {
+		handler.SendError(c, errno.ErrGetAvailableClassrooms, nil, err.Error())
+		return
+	}
+	weekString, err := strconv.Atoi(weekday)
+	if err != nil {
+		handler.SendError(c, errno.ErrGetAvailableClassrooms, nil, err.Error())
+		return
+	}
+
 	classroom, err := model.GetClassroomsFromDB(weeknoString, weekString, building)
 	if err != nil {
 		handler.SendError(c, errno.ErrGetAvailableClassrooms, nil, err.Error())
 		return
 	}
 
-	availableClassrooms := service.UnMarshalData(&classroom.AvailableClassrooms)
+	//availableClassrooms := service.MarshalData(&classroom.AvailableClassrooms)
 
-	handler.SendResponse(c, nil, availableClassrooms)
+	handler.SendResponse(c, nil,classroom.AvailableClassrooms)
 }

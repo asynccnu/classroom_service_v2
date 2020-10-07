@@ -3,6 +3,8 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/asynccnu/classroom_service_v2/service"
+
 	"net/http"
 	"time"
 
@@ -19,7 +21,8 @@ import (
 )
 
 var (
-	cfg = pflag.StringP("config", "c", "", "apiserver config file path.")
+	cfg           = pflag.StringP("config", "c", "", "apiserver config file path.")
+	excelFilePath = pflag.StringP("path", "p", "", "Excel file path.")
 )
 
 func main() {
@@ -37,6 +40,9 @@ func main() {
 	model.DB.Init()
 	defer model.DB.Close()
 
+	if *excelFilePath != "" {
+		service.InsertAllAndFilter(*excelFilePath)
+	}
 	// Set gin mode.
 	gin.SetMode(viper.GetString("runmode"))
 
@@ -65,6 +71,7 @@ func main() {
 	log.Info(
 		fmt.Sprintf("Start to listening the incoming requests on http address: %s", viper.GetString("addr")))
 	log.Info(http.ListenAndServe(viper.GetString("addr"), g).Error())
+
 }
 
 // pingServer pings the http server to make sure the router is working.

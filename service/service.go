@@ -2,18 +2,16 @@ package service
 
 import (
 	"encoding/json"
+	"fmt"
+	"github.com/asynccnu/classroom_service_v2/log"
+	"github.com/asynccnu/classroom_service_v2/model"
+	"github.com/tealeg/xlsx/v3"
+	//	"github.com/tealeg/xlsx/v3"
 	"regexp"
 	"strconv"
 
-	"github.com/asynccnu/classroom_service_v2/log"
-	"github.com/asynccnu/classroom_service_v2/model"
-
-	"github.com/tealeg/xlsx/v3"
 	"go.uber.org/zap"
 )
-
-// 选课手册地址
-var filePath = "/home/wency/data/2020—2021学年第一学期选课手册.xlsx"
 
 func InsertAllClassrooms() {
 	// 7,8号楼和南湖所有教室
@@ -92,20 +90,21 @@ func InsertAllClassrooms() {
 	// 先往数据库中插入所有教室  有的课周六都要上 丧心病狂
 	for week := 1; week <= 21; week++ {
 		for weekday := 1; weekday <= 7; weekday++ {
-			instance7 := model.Classrooms{Week: week, Weekday: weekday, Building: "7", AvailableClassrooms: *MarshalData(&building7)}
-			instance8 := model.Classrooms{Week: week, Weekday: weekday, Building: "8", AvailableClassrooms: *MarshalData(&building8)}
-			instanceNH := model.Classrooms{Week: week, Weekday: weekday, Building: "N", AvailableClassrooms: *MarshalData(&buildingNH)}
+			instance7 := model.Classrooms{Week: week, Weekday: weekday, Building: "7", AvailableClassrooms: building7}
+			instance8 := model.Classrooms{Week: week, Weekday: weekday, Building: "8", AvailableClassrooms: building8}
+			instanceNH := model.Classrooms{Week: week, Weekday: weekday, Building: "N", AvailableClassrooms: buildingNH}
 
-			InsertData(&instance7)
-			InsertData(&instance8)
-			InsertData(&instanceNH)
+			InsertDataInDB(&instance7)
+			InsertDataInDB(&instance8)
+			InsertDataInDB(&instanceNH)
+
 		}
 	}
 
 }
 
 // 从选课手册中解析被使用的教室
-func GetUnavailableClassrooms(channel chan *model.UnavailableClassrooms) {
+func GetUnavailableClassrooms(channel chan *model.UnavailableClassrooms, filePath string) {
 	weekdayMap := map[string]int{"一": 1, "二": 2, "三": 3, "四": 4, "五": 5, "六": 6, "七": 7}
 	file, err := xlsx.OpenFile(filePath)
 	if err != nil {
@@ -117,8 +116,9 @@ func GetUnavailableClassrooms(channel chan *model.UnavailableClassrooms) {
 	// 选课手册中第10,11 \12,13\ 14,15 列为上课时间地点
 	// 时间的格式为星期一第9-10节{1-15周(单)} 或 星期一第9-10节{1-15周} 或 星期一第9-10节{1-15周}
 	for _, sheet := range file.Sheets {
+		fmt.Println(sheet.Name)
 		max := sheet.MaxRow
-		// 不要把下面max替换成sheet.MaxRow, 会死机,我吐了
+		// 不要把下面max替换成sheet.MaxRow, 会死机,排了半天,我吐了
 		for i := 0; i <= max; i++ {
 			for j := 10; j <= 14; j += 2 {
 				cellDate, _ := sheet.Cell(i, j)
@@ -131,18 +131,49 @@ func GetUnavailableClassrooms(channel chan *model.UnavailableClassrooms) {
 					}
 					if place[:1] == "7" || place[:1] == "8" || place[:1] == "N" {
 						// 写正则匹配  匹配结构 [[第5-6节{6-20周(双)} 5 6 6 20 (双)]]
-						r, _ := regexp.Compile("星期(.*)第(.*)-(.*)节{(.*)-(.*)周(.*)}")
+						r, err := regexp.Compile("星期(.*)第(.*)-(.*)节{(.*)-(.*)周(.*)}")
+						if err != nil {
+							log.Error("Compile failed",
+								zap.String("reason", err.Error()),
+							)
+							continue
+						}
 						result := r.FindAllStringSubmatch(date, -1)
 
-						// 当格式有变 没匹配到正确的数据时跳过
-						if len(result) < 1 || len(result[0]) < 6 {
+						if len(result)<1{
+							continue
+						}
+						// 提取周数星期等数字,失败就跳过
+						weekStart, err := strconv.Atoi(result[0][4])
+						if err != nil {
+							log.Error("string convert to int failed",
+								zap.String("reason", err.Error()),
+							)
+							continue
+						}
+						weekEnd, err := strconv.Atoi(result[0][5])
+						if err != nil {
+							log.Error("string convert to int failed",
+								zap.String("reason", err.Error()),
+							)
+							continue
+						}
+						timeStart, err := strconv.Atoi(result[0][2])
+						if err != nil {
+							log.Error("string convert to int failed",
+								zap.String("reason", err.Error()),
+							)
+							continue
+						}
+						timeEnd, err := strconv.Atoi(result[0][3])
+						if err != nil {
+							log.Error("string convert to int failed",
+								zap.String("reason", err.Error()),
+							)
 							continue
 						}
 
-						weekStart, _ := strconv.Atoi(result[0][4])
-						weekEnd, _ := strconv.Atoi(result[0][5])
-						timeStart, _ := strconv.Atoi(result[0][2])
-						timeEnd, _ := strconv.Atoi(result[0][3])
+						// 如果有单双周就提取出来
 						weekType := ""
 						if len(result[0]) > 6 {
 							weekType = result[0][6]
@@ -178,20 +209,8 @@ func MarshalData(rooms *model.Rooms) *[]byte {
 	return &bytes
 }
 
-// 解析JSON格式
-func UnMarshalData(rooms *[]byte) *model.Rooms {
-	classroom := model.Rooms{}
-	err := json.Unmarshal(*rooms, &classroom)
-	if err != nil {
-		log.Error("UnMarshal data failed",
-			zap.String("reason", err.Error()),
-		)
-	}
-	return &classroom
-}
-
 // 往数据库中插入数据
-func InsertData(classrooms *model.Classrooms) {
+func InsertDataInDB(classrooms *model.Classrooms) {
 	err := model.InsertClassroomsInDB(classrooms)
 	if err != nil {
 		log.Error("Insert data Faild",
@@ -199,3 +218,15 @@ func InsertData(classrooms *model.Classrooms) {
 		)
 	}
 }
+
+//// 解析JSON格式
+//func UnMarshalData(rooms *[]byte) *model.Rooms {
+//	classroom := model.Rooms{}
+//	err := json.Unmarshal(*rooms, &classroom)
+//	if err != nil {
+//		log.Error("UnMarshal data failed",
+//			zap.String("reason", err.Error()),
+//		)
+//	}
+//	return &classroom
+//}
