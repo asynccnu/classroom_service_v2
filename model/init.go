@@ -31,9 +31,8 @@ func InitSelfDB() *mongo.Client {
 	// Check the connection
 	err = client.Ping(context.TODO(), nil)
 	if err != nil {
-		// log.Errorf(err, "Database connection failed.")
-		log.Error("Database connection failed.")
-		return client
+		log.Error("Database connection failed: " + err.Error())
+		panic(err)
 	}
 
 	log.Info("Connected to MongoDB!")

@@ -32,13 +32,12 @@ func Get(c *gin.Context) {
 		return
 	}
 
+	// 获取空闲教室
 	classroom, err := model.GetClassroomDoc(week, day, building)
 	if err != nil {
-		handler.SendError(c, errno.ErrGetAvailableClassrooms, nil, err.Error())
+		handler.SendError(c, errno.ErrGetClassrooms, nil, err.Error())
 		return
 	}
 
-	// TO DO: 格式转换，response
-
-	handler.SendResponse(c, nil, classroom.List)
+	handler.SendResponse(c, nil, classroom)
 }

@@ -25,7 +25,7 @@ func CreateMultipleClassroomDocs(instances []*ClassroomModel) error {
 	return err
 }
 
-// 修改教室文档
+// 更新教室文档
 func UpdateClassroom(instance *ClassroomModel) error {
 	collection := DB.Self.Database(DBName).Collection(ClassroomCol)
 	_, err := collection.ReplaceOne(

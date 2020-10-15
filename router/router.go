@@ -23,9 +23,9 @@ func Load(g *gin.Engine, mw ...gin.HandlerFunc) *gin.Engine {
 		c.String(http.StatusNotFound, "The incorrect API route.")
 	})
 
-	class := g.Group("/classroom/v2")
+	router := g.Group("api/classroom/v2")
 	{
-		class.GET("", classroom.Get)
+		router.GET("", classroom.Get)
 	}
 
 	// The health check handlers
