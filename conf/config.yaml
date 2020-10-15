@@ -14,6 +14,5 @@ log:
   log_rotate_size: 1
   log_backup_count: 7
 db: # DB 配置 部署时环境变量覆盖
-  name: db_apiserver
+  name: classroom
   url: mongodb://127.0.0.1:27017/?compressors=disabled&gssapiServiceName=mongodb
-  database: classroom_service

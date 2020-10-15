@@ -3,8 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/asynccnu/classroom_service_v2/service"
-
 	"net/http"
 	"time"
 
@@ -13,6 +11,7 @@ import (
 	"github.com/asynccnu/classroom_service_v2/model"
 	"github.com/asynccnu/classroom_service_v2/router"
 	"github.com/asynccnu/classroom_service_v2/router/middleware"
+	"github.com/asynccnu/classroom_service_v2/script"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/pflag"
@@ -21,7 +20,9 @@ import (
 )
 
 var (
-	cfg           = pflag.StringP("config", "c", "", "apiserver config file path.")
+	cfg = pflag.StringP("config", "c", "", "apiserver config file path.")
+
+	// 选课手册 Excel 文件路径，若不为空则启动空闲教室数据导入脚本
 	excelFilePath = pflag.StringP("path", "p", "", "Excel file path.")
 )
 
@@ -41,8 +42,11 @@ func main() {
 	defer model.DB.Close()
 
 	if *excelFilePath != "" {
-		service.InsertAllAndFilter(*excelFilePath)
+		// 空闲教室数据导入
+		script.SyncImportClassroomData(*excelFilePath)
+		return
 	}
+
 	// Set gin mode.
 	gin.SetMode(viper.GetString("runmode"))
 

@@ -2,38 +2,47 @@ package model
 
 import (
 	"context"
+
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-type UnavailableClassrooms struct {
-	Week     [2]int
-	Weekday  int
-	Time     [2]int
-	WeekType string // 单双周
-	Place    string
-}
-
-func InsertClassroomsInDB(instance *Classrooms) error {
+// 新建教室文档数据
+func CreateClassroomDoc(instance *ClassroomModel) error {
 	collection := DB.Self.Database(DBName).Collection(ClassroomCol)
-	_, err := collection.InsertOne(context.TODO(), *instance)
+	_, err := collection.InsertOne(context.TODO(), instance)
 
 	return err
 }
 
-func UpdateAvailableClassroomInDB(newClassrooms *Classrooms) error {
+// 批量新建教室文档数据
+func CreateMultipleClassroomDocs(instances []*ClassroomModel) error {
+	var docs []interface{}
+	for _, instance := range instances {
+		docs = append(docs, instance)
+	}
+
+	_, err := DB.Self.Database(DBName).Collection(ClassroomCol).InsertMany(context.TODO(), docs)
+	return err
+}
+
+// 修改教室文档
+func UpdateClassroom(instance *ClassroomModel) error {
 	collection := DB.Self.Database(DBName).Collection(ClassroomCol)
-	_, err := collection.ReplaceOne(context.TODO(),
-		bson.M{"week": newClassrooms.Week, "weekday": newClassrooms.Weekday, "building": newClassrooms.Building},
-		*newClassrooms)
+	_, err := collection.ReplaceOne(
+		context.TODO(),
+		bson.M{"week": instance.Week, "weekday": instance.Day, "building": instance.Building},
+		instance,
+	)
 
 	return err
 }
 
-func GetClassroomsFromDB(week int, weekday int, building string) (*Classrooms, error) {
-	classroom := Classrooms{}
+// 获取文档数据
+func GetClassroomDoc(week, day int, building string) (*ClassroomModel, error) {
+	var classroom ClassroomModel
 
 	err := DB.Self.Database(DBName).Collection(ClassroomCol).
-		FindOne(context.TODO(), bson.M{"week": week, "weekday": weekday, "building": building}).
+		FindOne(context.TODO(), bson.M{"week": week, "day": day, "building": building}).
 		Decode(&classroom)
 
 	if err != nil {

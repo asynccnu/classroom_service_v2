@@ -12,32 +12,33 @@ import (
 
 func Get(c *gin.Context) {
 	// 周数(1-20) 星期(1-7) 楼栋"7""8""N"
-	week := c.DefaultQuery("weekno", "")
-	weekday := c.DefaultQuery("week", "")
+	weekStr := c.DefaultQuery("week", "")
+	dayStr := c.DefaultQuery("day", "")
 	building := c.DefaultQuery("building", "")
-	if week == "" || weekday == "" || building == "" {
-		handler.SendBadRequest(c, errno.ErrQuery, nil, "weekno, week and building are required.")
+	if weekStr == "" || dayStr == "" || building == "" {
+		handler.SendBadRequest(c, errno.ErrQuery, nil, "The week, day and building are required.")
 		return
 	}
 
-	weeknoString, err := strconv.Atoi(week)
+	week, err := strconv.Atoi(weekStr)
+	if err != nil {
+		handler.SendBadRequest(c, errno.ErrQuery, nil, "The 'week' is wrong.")
+		return
+	}
+
+	day, err := strconv.Atoi(dayStr)
+	if err != nil {
+		handler.SendBadRequest(c, errno.ErrQuery, nil, "The 'day' is wrong.")
+		return
+	}
+
+	classroom, err := model.GetClassroomDoc(week, day, building)
 	if err != nil {
 		handler.SendError(c, errno.ErrGetAvailableClassrooms, nil, err.Error())
 		return
 	}
-	weekString, err := strconv.Atoi(weekday)
-	if err != nil {
-		handler.SendError(c, errno.ErrGetAvailableClassrooms, nil, err.Error())
-		return
-	}
 
-	classroom, err := model.GetClassroomsFromDB(weeknoString, weekString, building)
-	if err != nil {
-		handler.SendError(c, errno.ErrGetAvailableClassrooms, nil, err.Error())
-		return
-	}
+	// TO DO: 格式转换，response
 
-	//availableClassrooms := service.MarshalData(&classroom.AvailableClassrooms)
-
-	handler.SendResponse(c, nil,classroom.AvailableClassrooms)
+	handler.SendResponse(c, nil, classroom.List)
 }

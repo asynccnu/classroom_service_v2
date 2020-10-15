@@ -1,47 +1,19 @@
 package model
 
-import (
-	"time"
-)
-
-var DBName = "classroom_service"
+var DBName = "classroom"
 
 const (
-	ClassroomCol = "classrooms"
+	ClassroomCol = "classroom"
 )
 
-// 数据库表的结构
-type Classrooms struct {
-	Week                int    `bson:"week"`
-	Weekday             int    `bson:"weekday"`
-	Building            string `bson:"building"`
-	AvailableClassrooms Rooms  `bson:"available_classrooms"`
+type ClassroomModel struct {
+	Week     int         `bson:"week"`     // 周次
+	Day      int         `bson:"day"`      // 星期 1-7
+	Building string      `bson:"building"` // 教学楼，7/8/南湖综合楼
+	List     []*RoomItem `bson:"list"`
 }
 
-// 参照上一版接口文档写的
-type Rooms struct {
-	One    []string `bson:"one"`
-	Two    []string `bson:"two"`
-	Three  []string `bson:"three"`
-	Four   []string `bson:"four"`
-	Five   []string `bson:"five"`
-	Six    []string `bson:"six"`
-	Seven  []string `bson:"seven"`
-	Eight  []string `bson:"eight"`
-	Nine   []string `bson:"nine"`
-	Ten    []string `bson:"ten"`
-	Eleven []string `bson:"eleven"`
-	Twelve []string `bson:"twelve"`
-}
-
-type BaseModel struct {
-	Id        uint64     `gorm:"primary_key;AUTO_INCREMENT;column:id" json:"-"`
-	CreatedAt time.Time  `gorm:"column:createdAt" json:"-"`
-	UpdatedAt time.Time  `gorm:"column:updatedAt" json:"-"`
-	DeletedAt *time.Time `gorm:"column:deletedAt" sql:"index" json:"-"`
-}
-
-// Token represents a JSON web token.
-type Token struct {
-	Token string `json:"token"`
+type RoomItem struct {
+	Time  int      `bson:"time"` // 节次，如第1节
+	Rooms []string `bson:"rooms"`
 }

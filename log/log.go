@@ -10,16 +10,7 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
-var (
-	logger *zap.Logger
-)
-
-type Logger interface {
-	Info(string, ...zap.Field)
-	Fatal(string, ...zap.Field)
-	Debug(string, ...zap.Field)
-	Error(string, ...zap.Field)
-}
+var logger *zap.Logger
 
 func init() {
 	hook := lumberjack.Logger{
@@ -37,10 +28,10 @@ func init() {
 		MessageKey:     "msg",
 		StacktraceKey:  "stacktrace",
 		LineEnding:     zapcore.DefaultLineEnding,
-		EncodeLevel:    zapcore.LowercaseLevelEncoder,  // 小写编码器
-		EncodeTime:     zapcore.ISO8601TimeEncoder,     // ISO8601 UTC 时间格式
-		EncodeDuration: zapcore.SecondsDurationEncoder, //
-		EncodeCaller:   zapcore.FullCallerEncoder,      // 全路径编码器
+		EncodeLevel:    zapcore.LowercaseColorLevelEncoder, // 小写编码器，带颜色
+		EncodeTime:     zapcore.ISO8601TimeEncoder,         // ISO8601 UTC 时间格式
+		EncodeDuration: zapcore.SecondsDurationEncoder,     //
+		EncodeCaller:   zapcore.FullCallerEncoder,          // 全路径编码器
 		EncodeName:     zapcore.FullNameEncoder,
 	}
 	// 设置日志级别
@@ -48,7 +39,7 @@ func init() {
 	// atomicLevel.SetLevel(zap.InfoLevel)
 	// 新建一个ZapCore
 	core := zapcore.NewCore(
-		zapcore.NewJSONEncoder(encoderConfig),                                           // 编码器配置
+		zapcore.NewConsoleEncoder(encoderConfig),                                        // 编码器配置
 		zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout), zapcore.AddSync(&hook)), // 打印到控制台和文件
 		atomicLevel, // 日志级别
 	)
@@ -57,9 +48,9 @@ func init() {
 	// 开启文件及行号
 	development := zap.Development()
 	// 设置初始化字段
-	filed := zap.Fields(zap.String("serviceName", "serviceName"))
+	// filed := zap.Fields(zap.String("serviceName", "serviceName"))
 	// 构造日志
-	logger = zap.New(core, caller, development, filed)
+	logger = zap.New(core, caller, development)
 }
 
 func SyncLogger() {

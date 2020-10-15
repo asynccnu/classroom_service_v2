@@ -16,7 +16,6 @@ type Database struct {
 
 var DB *Database
 
-// used for cli
 func InitSelfDB() *mongo.Client {
 	// Set client options
 	clientOptions := options.Client().ApplyURI(viper.GetString("db.url"))
@@ -51,7 +50,7 @@ func (db *Database) Init() {
 		Self: GetSelfDB(),
 	}
 
-	DBName = viper.GetString("db.database")
+	DBName = viper.GetString("db.name")
 }
 
 func (db *Database) Close() {
