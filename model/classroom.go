@@ -22,6 +22,7 @@ func CreateMultipleClassroomDocs(instances []*ClassroomModel) error {
 	}
 
 	_, err := DB.Self.Database(DBName).Collection(ClassroomCol).InsertMany(context.TODO(), docs)
+
 	return err
 }
 
@@ -45,9 +46,5 @@ func GetClassroomDoc(week, day int, building string) (*ClassroomModel, error) {
 		FindOne(context.TODO(), bson.M{"week": week, "day": day, "building": building}).
 		Decode(&classroom)
 
-	if err != nil {
-		return nil, err
-	}
-
-	return &classroom, nil
+	return &classroom, err
 }

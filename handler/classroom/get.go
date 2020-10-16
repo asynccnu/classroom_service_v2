@@ -6,6 +6,7 @@ import (
 	"github.com/asynccnu/classroom_service_v2/handler"
 	"github.com/asynccnu/classroom_service_v2/model"
 	"github.com/asynccnu/classroom_service_v2/pkg/errno"
+	"go.mongodb.org/mongo-driver/mongo"
 
 	"github.com/gin-gonic/gin"
 )
@@ -34,7 +35,14 @@ func Get(c *gin.Context) {
 
 	// 获取空闲教室
 	classroom, err := model.GetClassroomDoc(week, day, building)
-	if err != nil {
+	if mongo.ErrNoDocuments == err {
+		classroom = &model.ClassroomModel{
+			Week:     week,
+			Day:      day,
+			Building: building,
+			List:     make([]*model.RoomItem, 0),
+		}
+	} else if err != nil {
 		handler.SendError(c, errno.ErrGetClassrooms, nil, err.Error())
 		return
 	}
