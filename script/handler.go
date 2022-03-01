@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	weekMin = 4  // 最小周数
+	weekMin = 1  // 最小周数
 	weekMax = 21 // 最大周数
 	dayMin  = 1
 	dayMax  = 7
