@@ -34,7 +34,7 @@ func GetCourseInfoFromCourseFile(channel chan *CourseItem, file *xlsx.File) {
 			// 遍历一条课程数据中的多个时间、地点
 			for j := 10; j <= 14; j += 2 {
 				date := row.Cells[j].String()
-				place := row.Cells[j+1].String()
+				place := strings.ToUpper(row.Cells[j+1].String())
 				if date == "" || place == "" {
 					continue
 				}
