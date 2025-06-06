@@ -1,4 +1,4 @@
-FROM golang:1.14.1
+FROM golang:1.14.3
 ENV GO111MODULE "on"
 ENV GOPROXY "https://goproxy.cn"
 WORKDIR /src/classroom_service_v2

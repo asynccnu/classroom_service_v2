@@ -1,6 +1,6 @@
 package model
 
-var DBName = "classroom"
+var DBName = "ccnubox"
 
 const (
 	ClassroomCol = "classroom"
